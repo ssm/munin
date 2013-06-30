@@ -12,6 +12,7 @@ use POSIX qw(strftime);
 use Getopt::Long;
 use Time::HiRes;
 use Scalar::Util qw( weaken );
+use URI::Escape;
 
 use Munin::Master::Logger;
 use Munin::Master::Utils;
@@ -491,6 +492,20 @@ sub generate_service_templates {
 
     # Compute the ZOOM urls
     {
+        my @fields;
+        my $has_stack = 0;
+        my $has_area = 0;
+
+        # Personally, I don't like code preceeding "my" declarations.
+        foreach my $f (@{munin_get_field_order($service)}) {
+            my $draw = munin_get($service->{$f}, "draw", $f);
+                push @fields, "$f:" . munin_get($service->{$f}, "label", $f)
+                    if munin_draw_field($service->{$f});
+
+                $has_stack++ if $draw eq "STACK";
+                $has_area++ if $draw eq "AREA";
+        }
+
         my $epoch_now = time;
 	# The intervals are a bit larger, just like the munin-graph
 	my $start_day = $epoch_now - (3600 * 30);
@@ -499,7 +514,19 @@ sub generate_service_templates {
 	my $start_year = $epoch_now - (3600 * 24 * 400);
 	my $size_x = 800;
 	my $size_y = 400;
-	my $common_url = "$root_path/static/dynazoom.html?cgiurl_graph=$config->{'cgiurl_graph'}&plugin_name=$path&size_x=$size_x&size_y=$size_y";
+	my $common_url = "$root_path/static/dynazoom.html?cgiurl_graph=$config->{'cgiurl_graph'}&plugin_name=$path&size_x=$size_x&size_y=$size_y&fields=" . uri_escape(join(",", @fields));
+
+        my $graphtotal = munin_get($service, "graph_total");
+        if (defined $graphtotal and $graphtotal ne "undef") {
+            $common_url .= "&hastotal=1";
+        }
+        if ($has_stack) {
+            $common_url .= "&hasstack=1";
+        }
+        if ($has_area) {
+            $common_url .= "&hasarea=1";
+        }
+
 	$srv{zoomday} = "$common_url&start_epoch=$start_day&stop_epoch=$epoch_now";
 	$srv{zoomweek} = "$common_url&start_epoch=$start_week&stop_epoch=$epoch_now";
 	$srv{zoommonth} = "$common_url&start_epoch=$start_month&stop_epoch=$epoch_now";

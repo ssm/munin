@@ -94,6 +94,9 @@ my $log_file       = undef;
 my $skip_locking   = 0;
 my $skip_stats     = 0;
 my $stdout         = 0;
+my $nototal        = 0;
+my $nostack        = 0;
+my $force_line     = 0;
 my $force_run_as_root = 0;
 my $conffile       = $Munin::Common::Defaults::MUNIN_CONFDIR . "/munin.conf";
 my $libdir         = $Munin::Common::Defaults::MUNIN_LIBDIR;
@@ -162,6 +165,7 @@ my %sumtimes = (    # time => [ label, seconds-in-period ]
 # Limit graphing to certain hosts and/or services
 my @limit_hosts    = ();
 my @limit_services = ();
+my @limit_fields = ();
 my $only_fqn = '';
 
 my $watermark = "Munin " . $Munin::Common::Defaults::MUNIN_VERSION;
@@ -183,6 +187,7 @@ my $STATS;
 
 my @init_limit_hosts = @limit_hosts;
 my @init_limit_services = @limit_services;
+my @init_limit_fields = @limit_fields;
 
 sub process_pinpoint {
     my ($pinpoint, $arg_name, $arg_value) = @_;     
@@ -225,6 +230,7 @@ sub graph_startup {
     %draw = %init_draw;
     @limit_hosts = @init_limit_hosts;
     @limit_services = @init_limit_services;
+    @limit_fields = @init_limit_fields;
 
     $pinpoint       = undef;
     my $pinpointopt    = undef;
@@ -240,6 +246,9 @@ sub graph_startup {
     $skip_locking   = 0;
     $skip_stats     = 0;
     $stdout         = 0;
+    $nototal        = 0;
+    $nostack        = 0;
+    $force_line     = 0;
 
     $size_x 	    = undef;
     $size_y         = undef;
@@ -265,9 +274,13 @@ sub graph_startup {
                 "lazy!"         => \$force_lazy,
                 "host=s"        => \@limit_hosts,
                 "service=s"     => \@limit_services,
+                "field=s"       => \@limit_fields,
                 "only-fqn=s"    => sub{ $only_fqn = process_fqn(@_); },
                 "config=s"      => \$conffile,
                 "stdout!"       => \$stdout,
+                "nototal"	=> \$nototal,
+                "nostack"	=> \$nostack,
+                "force-line"	=> \$force_line,
                 "force-run-as-root!" => \$force_run_as_root,
                 "day!"          => \$draw{'day'},
                 "week!"         => \$draw{'week'},
@@ -372,7 +385,10 @@ sub graph_main {
     # The loaded $config is stale within 5 minutes.
     # So, we need to reread it when this happens.
     $config = munin_readconfig_part('datafile');
-   
+
+    # Reset limit fields.
+    @limit_fields   = ();
+
     # Reset an eventual custom size
     $size_x 	    = undef;
     $size_y         = undef;
@@ -382,6 +398,9 @@ sub graph_main {
     $lower_limit    = undef;
     $upper_limit    = undef;
     $pinpoint       = undef;
+    $nototal        = 0;
+    $nostack        = 0;
+    $force_line     = 0;
 
     $fileext        = "png";
 
@@ -390,6 +409,10 @@ sub graph_main {
 
     GetOptions (
                 "host=s"        => \@limit_hosts,
+                "field=s"       => \@limit_fields,
+                "nototal"	=> \$nototal,
+                "nostack"	=> \$nostack,
+                "force-line"	=> \$force_line,
                 "only-fqn=s"    => sub { $only_fqn = process_fqn(@_); },
                 "day!"          => \$draw{'day'},
                 "week!"         => \$draw{'week'},
@@ -905,6 +928,7 @@ sub process_service {
     DEBUG "[DEBUG] Node name: $sname\n";
 
     my $field_count   = 0;
+    my $field_skip_count = 0;
     my $max_field_len = 0;
     my @field_order   = ();
     my $rrdname;
@@ -960,7 +984,19 @@ sub process_service {
     my %total_neg;
     my $autostacking = 0;
 
+    # When a field is skipped by using --fields, there is a possibility to
+    # skip a field that is the bottom of a stack.  last_draw is the
+    # line type of the bottom of the stack.  When the drawn bottom field is
+    # set as a stack, it's line type will be set to the skipped bottom's type.
+    my $last_draw;
+
+    # If the bottom field is skipped, this is set to 1.
+    my $bottom_skipped = 0;
+
     DEBUG "[DEBUG] Treating fields \"" . join("\",\"", @field_order) . "\".";
+    DEBUG "[DEBUG] Graph only these fields: \"" . join("\",\"", @limit_fields) . "\"."
+        if (@limit_fields);
+
     for my $fname (@field_order) {
         my $path  = undef;
         my $field = undef;
@@ -970,18 +1006,83 @@ sub process_service {
         }
         $field = munin_get_node($service, [$fname]);
 
+        my $fielddraw = munin_get($field, "draw", "LINE1");
+
+        # Force line to be LINE1 if it is an AREA type.
+        if ($force_line)
+        {
+            if ($fielddraw eq 'AREA')
+            {
+                $fielddraw = 'LINE1';
+            }
+            elsif ($fielddraw eq 'ARASTACK')
+            {
+                $fielddraw = 'LINESTACK1';
+            }
+        }
+
+        if ($nostack)
+        {
+            DEBUG "[DEBUG] No stacking option";
+
+            # Disable stacking.
+            if ($fielddraw eq 'STACK')
+            {
+                $fielddraw = $last_draw || $fielddraw;
+            }
+            elsif ($fielddraw eq 'AREASTACK')
+            {
+                $fielddraw = 'AREA';
+            }
+            elsif ($fielddraw =~ /LINESTACK(\d+(?:.\d+)?)/)
+            {
+                $fielddraw = "LINE$1";
+            }
+            else
+            {
+                $last_draw = $fielddraw;
+            }
+        }
+
+        if (@limit_fields)
+        {
+            my $skip_this_field = !grep {$fname eq $_} @limit_fields;
+
+            if ($fielddraw ne 'STACK')
+            {
+                DEBUG "[DEBUG] Non stack, Set bottom_skipped to '$skip_this_field' and last_draw to '$fielddraw'";
+                $bottom_skipped = $skip_this_field;
+                $last_draw = $fielddraw;
+            }
+            # This is a STACK.  Check if bottom was skipped.
+            elsif ($bottom_skipped)
+            {
+                DEBUG "[DEBUG] Stacked field (bottom was skipped and field count > 0).  Last draw '$last_draw'";
+                # The bottom was skipped so this becomes the bottom.
+                $fielddraw = $last_draw;
+                $bottom_skipped = 0 unless $skip_this_field;
+		DEBUG "[DEBUG] bottom_skipped is now '$bottom_skipped'";
+            }
+
+            if ($skip_this_field)
+            {
+                DEBUG "[DEBUG] Skipping field $fname";
+                $field_skip_count++;
+                next;
+            }
+        }
+
         next if (!defined $field or !$field or !process_field($field));
         DEBUG "[DEBUG] Processing field \"$fname\" ["
             . munin_get_node_name($field) . "].";
 
-        my $fielddraw = munin_get($field, "draw", "LINE1");
-
         if ($field_count == 0 and $fielddraw eq 'STACK') {
-
             # Illegal -- first field is a STACK
+            # Ignore if fields have been skipped.
             DEBUG "ERROR: First field (\"$fname\") of graph "
                 . join(' :: ', munin_get_node_loc($service))
-                . " is STACK. STACK can only be drawn after a LINEx or AREA.";
+                . " is STACK. STACK can only be drawn after a LINEx or AREA."
+                if ($field_skip_count == 0);
             $fielddraw = "LINE1";
         }
 
@@ -1118,7 +1219,9 @@ sub process_service {
 	}
 	
 	# Select a default colour if no explict one
-	$colour ||= ($single_value) ? $single_colour : $COLOUR[$field_count % @COLOUR];
+	# Add field_skip_count to keep the colors in the graph the same as
+	# graphs that show all fields.
+	$colour ||= ($single_value) ? $single_colour : $COLOUR[($field_count + $field_skip_count) % @COLOUR];
 
         # colour needed for transparent predictions and trends
         munin_set($field, "colour", $colour);
@@ -1280,7 +1383,7 @@ sub process_service {
     }
 
     my $graphtotal = munin_get($service, "graph_total");
-    if (defined $graphtotal and $graphtotal eq "undef") {
+    if ($nototal or (defined $graphtotal and $graphtotal eq "undef")) {
         $graphtotal = undef;
     }
 
@@ -1420,22 +1523,34 @@ sub process_service {
 	my ($upper_limit_overrided, $lower_limit_overrided);
 	for (my $index = 0; $index <= $#complete; $index++) {
 		if ($complete[$index] =~ /^(--upper-limit|-u)$/ && (defined $upper_limit)) {
+			$upper_limit_overrided = 1;
+			if ($upper_limit eq 'none')
+			{
+				splice(@complete, $index, 2);
+				$index--;
+				next;
+			}
 			$upper_limit = get_scientific($upper_limit);
 			$complete[$index + 1] = $upper_limit;
-			$upper_limit_overrided = 1;
 		}
 		if ($complete[$index] =~ /^(--lower-limit|-l)$/ && (defined $lower_limit)) {
+			$lower_limit_overrided = 1;
+			if ($lower_limit eq 'none')
+			{
+				splice(@complete, $index, 2);
+				$index--;
+				next;
+			}
 			$lower_limit = get_scientific($lower_limit);
 			$complete[$index + 1] = $lower_limit;
-			$lower_limit_overrided = 1;
 		}
 	}
 
 	# Add the limit if not present
-	if (defined $upper_limit && ! $upper_limit_overrided) {
+	if (defined $upper_limit && $upper_limit ne 'none' && ! $upper_limit_overrided) {
 		push @complete, "--upper-limit", $upper_limit;
 	}
-	if (defined $lower_limit && ! $lower_limit_overrided) {
+	if (defined $lower_limit && $lower_limit ne 'none' && ! $lower_limit_overrided) {
 		push @complete, "--lower-limit", $lower_limit;
 	}
 
@@ -1983,6 +2098,11 @@ Options:
 			in Munin.)
     --host <host>       Limit graphed hosts to <host>. Multiple --host options
                         may be supplied.
+    --field <field>	Limit graphed fields to <field>. Multiple --field options
+                        may be supplied.
+    --nototal           Skip graphing total for graphs that have it.
+    --nostack           Disable stacking of fields.
+    --force-line	Force draw type to be LINE if the draw type is AREA.
     --only-fqn <FQN>    For internal use with CGI graphing.  Graph only a
                         single fully qualified named graph, e.g. --only-fqn
                           root/Backend/dafnes.example.com/diskstats_iops
@@ -2001,8 +2121,10 @@ Options:
     --pinpoint <start,stop> Create custom-graphs. <start,stop> is the standard unix Epoch. [not active]
     --size_x <pixels>   Sets the X size of the graph in pixels [175]
     --size_y <pixels>   Sets the Y size of the graph in pixels [400]
-    --lower_limit <lim> Sets the lower limit of the graph
-    --upper_limit <lim> Sets the upper limit of the graph
+    --lower_limit <lim> Sets the lower limit of the graph.
+    --upper_limit <lim> Sets the upper limit of the graph.
+                        NOTE: Use 'none' to not set upper/lower limit.  Over-
+                        rides limits for the service.
 
 NOTE! --pinpoint and --only-fqn must not be combined with
 --[no]<day|week|month|year> options.  The result of doing that is

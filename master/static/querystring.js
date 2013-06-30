@@ -26,8 +26,13 @@ function Querystring(qs) { // optionally pass a querystring to parse
 		var value = (pair.length==2)
 			? decodeURIComponent(pair[1])
 			: name;
-		
-		this.params[name] = value;
+
+		if (typeof this.params[name] == "undefined")
+			this.params[name] = value;
+		else if (typeof this.params[name] == "string")
+			this.params[name] = [this.params[name], value];
+		else
+			this.params[name].push(value);
 	}
 }
 

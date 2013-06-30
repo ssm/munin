@@ -102,6 +102,7 @@ while (new CGI::Fast) {
     my $path = $ENV{PATH_INFO} || "";
 
     DEBUG "Request path is $path";
+    DEBUG "Request query is $ENV{QUERY_STRING}";
 
     # The full URL looks like this:
     # Case 1:
@@ -342,6 +343,8 @@ sub get_picture_filename {
     my $scale   = shift;
     my $fileext = shift;
     my $params  = shift;
+    my $filename_base;
+    my $filename;
 
     # XXX - hack to fix cgitmpdir default 
     $config->{cgitmpdir} ||= "$Munin::Common::Defaults::MUNIN_CGITMPDIR";
@@ -350,7 +353,17 @@ sub get_picture_filename {
     $params = $params ? "?$params" : "";
     $params =~ tr/\//_/; # / are forbidden in a filename
     $params = $1 if $params =~ m/(.*)/; # XXX - Q&D untaint
-    return "$cgi_tmp_dir/$domain/$name/$service-$scale.$fileext" . $params;
+    $filename_base = "$cgi_tmp_dir/$domain/$name/$service-$scale.$fileext";
+    $filename = $filename_base . $params;
+
+    # Due to the ability to graph specific fields, the filename can now be way
+    # too long.  Exploit -f to see if the name is too long.
+    if (! -f $filename && $!{ENAMETOOLONG})
+    {
+        $filename = $filename_base . Digest::MD5::md5_hex($params);
+    }
+DEBUG "[DEBUG] Using $filename as image name";
+    return $filename;
 }
 
 sub has_offending_chars {
@@ -481,6 +494,19 @@ sub draw_graph {
     push @params, "--debug"
       if (CGI::param("debug"));
 
+    # Limit fields
+    push @params, map {('--field' => $_)} CGI::param("field");
+
+    # Graph total
+    push @params, "--nototal" if CGI::param("nototal");
+
+    # Force draw to line1
+    push @params, "--force-line" if CGI::param("force_line");
+
+    # Disable stacking
+    push @params, "--nostack" if CGI::param("nostack");
+
+DEBUG "graph_main(\"" . join('", "', @params) . "\");";
     graph_main(\@params);
 
     return $filename;

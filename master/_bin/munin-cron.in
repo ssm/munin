@@ -17,4 +17,4 @@ nice @@LIBDIR@@/munin-html $@ || exit 1
 
 # The result of munin-html is needed for munin-graph.
 # It is a noop if graph_strategy is "cgi"
-nice @@LIBDIR@@/munin-graph --cron $@ || exit 1
+nice @@LIBDIR@@/munin-graph || exit 1

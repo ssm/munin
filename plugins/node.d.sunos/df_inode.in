@@ -13,6 +13,7 @@ This shows the default configuration
 
   [df*]
     env.df /usr/sbin/df
+    env.dfoptions -F ufs # if sunos df is used
     env.warning 92
     env.critical 98
 
@@ -53,10 +54,12 @@ critical=${critical:-98}
 
 # Figure out correct way to invoke df and what output to use
 if $DF -P -l -i $only >/dev/null 2>&1; then
-	DF="$DF -P -l -i $only"
+	DFOPTS=${dfopts:-}
+	DF="$DF $DFOPTS -P -l -i $only"
 	FSNAME=6
 else
-	DF="$DF -oi $only 2>/dev/null"
+	DFOPTS=${dfopts:--F ufs}
+	DF="$DF $DFOPTS -oi $only 2>/dev/null"
 	FSNAME=5
 	PCNT=4
 fi

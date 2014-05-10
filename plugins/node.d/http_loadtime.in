@@ -42,14 +42,15 @@ if [ "$1" = "autoconf" ]; then
 	echo "no (programs time, wget and tr required)"
 	    exit 0
     fi
-    if ! $wget_bin -q -O /dev/null $target; then
+    if ! wget -q -O /dev/null $target; then
 
-    # check if url responds
-    #
-    wget --spider $target $wget_opt
-    if [ "$?" != "0" ]; then
-        echo "no (Cannot run wget against \"$target\")"
-        exit 0
+        # check if url responds
+        #
+        wget --spider $target $wget_opt
+        if [ "$?" != "0" ]; then
+            echo "no (Cannot run wget against \"$target\")"
+            exit 0
+        fi
     fi
     echo yes
     exit 0
@@ -70,8 +71,6 @@ TEMPO_DIR=$(mktemp -dt munin_http_loadtime.XXXXXX) || exit 1
 
 trap "rm -rf $TEMPO_DIR" EXIT
 
-cd $TEMPO_DIR || exit 1
-loadtime=`$time_bin --quiet -f "%e" wget $wget_opt $target 2>&1`
-cd -
+loadtime=$(cd $TEMPO_DIR && $time_bin --quiet -f "%e" wget $wget_opt $target 2>&1)
 
 echo "loadtime.value $loadtime"

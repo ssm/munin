@@ -13,6 +13,10 @@ override_dh_auto_build:
 	dh_auto_build -- $(MAKEOPTS)
 	make -C doc html man
 
+override_dh_install:
+	rm -rfv debian/tmp/usr/share/man/man1
+	dh_install --fail-missing
+
 override_dh_installdocs:
 	dh_installdocs
 	@ # Use the packaged javascript libraries

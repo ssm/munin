@@ -1,0 +1,57 @@
+======================================
+ Getting started with Munin on Debian
+======================================
+
+Documentation
+-------------
+
+To have local documentation, install the «munin-doc» package, and open
+file:///usr/share/doc/munin-doc/html/index.html in a web browser.
+
+Documentation is also available online at
+http://munin.readthedocs.org/en/latest/index.html
+
+Set up the munin master
+-----------------------
+
+Pick one server to use as the munin master. Install the «munin»
+package on that server. Munin has a web interface, so you need to have
+a web server installed as well.
+
+Munin is pre-configured for apache2.4, but any web server capable of
+serving static files will do. If you are going to monitor many
+servers, using CGI or FastCGI will help.
+
+The default configuration adds a /munin/ location to all the
+virtualhosts on the web server. If the hostname is master.example.com,
+munin will be available at http://master.example.com/munin/
+
+Configuration examples for other web servers is available in the
+documentation.
+
+Adding munin nodes
+------------------
+
+On all servers you want to monitor, install the «munin-node» package.
+This can, and should, include your munin master.
+
+On each node, add an ACL entry to allow the munin master to connect:
+
+/etc/munin/munin-node.conf::
+
+  # master.example.com has address 192.0.2.2
+  cidr_allow 192.0.2.2/32
+
+Add node definitions to the munin master. They look like the following
+example::
+
+  [node1.example.com]
+  address 192.0.2.129
+
+You can add them to files in /etc/munin/munin-conf.d/*.conf
+(recommended), or to /etc/munin/munin.conf
+
+After changing munin-node configuration, you need to restart the munin
+node::
+
+  # service munin-node restart

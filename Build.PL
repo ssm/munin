@@ -261,8 +261,8 @@ if ( not $build->install_path('web') ) {
     $build->install_path( 'web' => $build->install_path('etc') );
 }
 
-File::Find::find( { wanted => \&_find_web_templates_wanted }, 'master/www' );
-File::Find::find( { wanted => \&_find_web_static_wanted }, 'master/static' );
+File::Find::find( { wanted => \&_find_web_templates_wanted }, 'www/templates' );
+File::Find::find( { wanted => \&_find_web_static_wanted }, 'www/static' );
 
 sub _find_web_templates_wanted {
     if ( lstat && -f _ && /\.tmpl$/ ) {

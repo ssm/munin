@@ -942,17 +942,6 @@ sub _update_rrd_file {
     return $current_updated_timestamp;
 }
 
-sub dump_to_file
-{
-	my ($filename, $obj) = @_;
-	open(DUMPFILE, ">> $filename");
-
-	use Data::Dumper;
-	print DUMPFILE Dumper($obj);
-
-	close(DUMPFILE);
-}
-
 sub _get_default_address
 {
 	my ($host) = @_;

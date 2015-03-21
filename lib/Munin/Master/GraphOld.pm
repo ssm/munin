@@ -1865,25 +1865,6 @@ sub expand_cdef {
     return ($max, $min, $avg);
 }
 
-sub parse_path {
-    my ($path, $domain, $node, $service, $field) = @_;
-    my $filename = "unknown";
-
-    if ($path =~ /^\s*([^:]*):([^:]*):([^:]*):([^:]*)\s*$/) {
-        $filename = munin_get_filename($config, $1, $2, $3, $4);
-    }
-    elsif ($path =~ /^\s*([^:]*):([^:]*):([^:]*)\s*$/) {
-        $filename = munin_get_filename($config, $domain, $1, $2, $3);
-    }
-    elsif ($path =~ /^\s*([^:]*):([^:]*)\s*$/) {
-        $filename = munin_get_filename($config, $domain, $node, $1, $2);
-    }
-    elsif ($path =~ /^\s*([^:]*)\s*$/) {
-        $filename = munin_get_filename($config, $domain, $node, $service, $1);
-    }
-    return $filename;
-}
-
 # Wrapper for munin_get_picture_filename to handle pinpoint
 sub get_picture_filename {
     my $of;

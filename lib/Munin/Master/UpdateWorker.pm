@@ -421,38 +421,47 @@ sub uw_override_with_conf {
 }
 
 
+# Tune all RRD files if the munin version differs from the one which
+# wrote the data.
+#
+# Tune any RRD files where the metadata on disk differs from the
+# metadata received by munin-update.
 sub _compare_and_act_on_config_changes {
     my ($self, $nested_service_config) = @_;
 
-    # Kjellm: Why do we need to tune RRD files after upgrade?
-    # Shouldn't we create a upgrade script or something instead?
-    #
-    # janl: Upgrade script sucks.  This way it's inline in munin and
-    #  no need to remember anything or anything.
-
-    my $just_upgraded = 0;
-
     my $old_config = Munin::Master::Config->instance()->{oldconfig};
 
-    if (not defined $old_config->{version}
-        or ($old_config->{version}
-            ne $Munin::Common::Defaults::MUNIN_VERSION)) {
-        $just_upgraded = 1;
+    my $data_version = $old_config->{version} ||= '';
+    my $code_version = $Munin::Common::Defaults::MUNIN_VERSION;
+
+    my $upgrade_all_ds;
+
+    if ($code_version ne $data_version) {
+        $upgrade_all_ds = 1;
+        NOTICE(sprintf('Versions differ, data="%s", code="%s". Forcing metadata check of all RRD files',
+                       $data_version, $code_version));
     }
 
+  SERVICE:
     for my $service (keys %{$nested_service_config->{data_source}}) {
-
         my $service_config = $nested_service_config->{data_source}{$service};
 
+        next SERVICE unless keys %{ $service_config };
+
+      DATA_SOURCE:
 	for my $data_source (keys %{$service_config}) {
 	    my $old_data_source = $data_source;
 	    my $ds_config = $service_config->{$data_source};
 
 	    my $group = $self->{host}{group}{group_name};
-	    my $host = $self->{host}{host_name};
+	    my $host  = $self->{host}{host_name};
 
+            # FIXME: How does this work with recursive groups?
 	    my $old_host_config = $old_config->{groups}{$group}{hosts}{$host};
-	    my $old_ds_config = undef;
+
+
+	    my $old_ds_config = {};
+            my $upgrade_this_ds;
 
 	    if ($old_host_config) {
 		$old_ds_config =
@@ -460,30 +469,26 @@ sub _compare_and_act_on_config_changes {
 							   $data_source);
 	    }
 
-	    if (defined($old_ds_config)
-		and %$old_ds_config
-		and defined($ds_config->{oldname})
-		and $ds_config->{oldname}) {
-
+	    if ($ds_config->{oldname}) {
 		$old_data_source = $ds_config->{oldname};
 		$old_ds_config =
 		    $old_host_config->get_canned_ds_config($service,
 							   $old_data_source);
 	    }
 
-	    if (defined($old_ds_config)
-		and %$old_ds_config
-		and not $self->_ds_config_eq($old_ds_config, $ds_config)) {
-		$self->_ensure_filename($service,
-					$old_data_source, $data_source,
-					$old_ds_config, $ds_config)
-		    and $self->_ensure_tuning($service, $data_source,
-					      $ds_config);
-		# _ensure_filename prints helpful warnings in the log
-	    } elsif ($just_upgraded) {
-		$self->_ensure_tuning($service, $data_source,
-				      $ds_config);
-	    }
+
+	    if (not $self->_ds_config_eq($old_ds_config, $ds_config)) {
+                $upgrade_this_ds=1;
+            }
+
+
+            next DATA_SOURCE unless $upgrade_all_ds or $upgrade_this_ds;
+
+            $self->_ensure_filename($service,
+                                    $old_data_source, $data_source,
+                                    $old_ds_config,   $ds_config);
+
+            $self->_ensure_tuning($service, $data_source, $ds_config);
 	}
     }
 }

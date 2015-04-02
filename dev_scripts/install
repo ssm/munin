@@ -97,18 +97,20 @@ stop_node() {
 	./dev_scripts/stop_munin-node
 }
 
+disable_taint() {
+    ./dev_scripts/disable_taint
+}
+
 case ${1:-} in
-	clean)
-		stop_node
-		clean_sandbox
-		;;
-	node)
-		make_sandbox
-		configure_plugins
-		configure_node
-		configure_master
-		;;
-	*)
-		make_sandbox
-		;;
+    clean)
+        stop_node
+        clean_sandbox
+        ;;
+    *)
+        make_sandbox
+        configure_master
+        configure_plugins
+        configure_node
+        disable_taint
+        ;;
 esac

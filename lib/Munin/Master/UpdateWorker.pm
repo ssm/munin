@@ -449,35 +449,35 @@ sub _compare_and_act_on_config_changes {
         next SERVICE unless keys %{ $service_config };
 
       DATA_SOURCE:
-	for my $data_source (keys %{$service_config}) {
-	    my $old_data_source = $data_source;
-	    my $ds_config = $service_config->{$data_source};
+        for my $data_source (keys %{$service_config}) {
+            my $old_data_source = $data_source;
+            my $ds_config = $service_config->{$data_source};
 
-	    my $group = $self->{host}{group}{group_name};
-	    my $host  = $self->{host}{host_name};
+            my $group = $self->{host}{group}{group_name};
+            my $host  = $self->{host}{host_name};
 
             # FIXME: How does this work with recursive groups?
-	    my $old_host_config = $old_config->{groups}{$group}{hosts}{$host};
+            my $old_host_config = $old_config->{groups}{$group}{hosts}{$host};
 
 
-	    my $old_ds_config = {};
+            my $old_ds_config = {};
             my $upgrade_this_ds;
 
-	    if ($old_host_config) {
-		$old_ds_config =
-		    $old_host_config->get_canned_ds_config($service,
-							   $data_source);
-	    }
+            if ($old_host_config) {
+                $old_ds_config =
+                    $old_host_config->get_canned_ds_config($service,
+                                                           $data_source);
+            }
 
-	    if ($ds_config->{oldname}) {
-		$old_data_source = $ds_config->{oldname};
-		$old_ds_config =
-		    $old_host_config->get_canned_ds_config($service,
-							   $old_data_source);
-	    }
+            if ($ds_config->{oldname}) {
+                $old_data_source = $ds_config->{oldname};
+                $old_ds_config =
+                    $old_host_config->get_canned_ds_config($service,
+                                                           $old_data_source);
+            }
 
 
-	    if (not $self->_ds_config_eq($old_ds_config, $ds_config)) {
+            if (not $self->_ds_config_eq($old_ds_config, $ds_config)) {
                 $upgrade_this_ds=1;
             }
 
@@ -489,7 +489,7 @@ sub _compare_and_act_on_config_changes {
                                     $old_ds_config,   $ds_config);
 
             $self->_ensure_tuning($service, $data_source, $ds_config);
-	}
+        }
     }
 }
 

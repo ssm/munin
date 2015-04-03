@@ -6,6 +6,21 @@
 
 jenkins_builds_running - Plugin to measure number of jenkins builds which are currently running
 
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+=over 4
+
+=item jobdir
+
+Path to jenkins job directory (default: /var/lib/jenkins/jobs)
+
+This is used during plugin autoconfiguration to determine if plugin
+should be installed,
+
+=back
+
 =head1 AUTHOR
 
 Contributed by Holger Levsen. I wrote and used them first for
@@ -32,9 +47,15 @@ Released under the GPLv2.
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
+JENKINS_JOBDIR=${jobdir:-/var/lib/jenkins/jobs}
+
 if [ "$1" = "autoconf" ]; then
+    if [ -d "$JENKINS_JOBDIR" ]; then
 	echo yes
-	exit 0
+    else
+        echo "no (could not find ${JENKINS_JOBDIR})"
+    fi
+    exit 0
 fi
 
 if [ "$1" = "config" ]; then

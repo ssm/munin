@@ -6,6 +6,18 @@
 
 jenkins_jobs - Plugin to measure number of jenkins jobs
 
+=head1 CONFIGURATION
+
+The following environment variables are used by this plugin:
+
+=over 4
+
+=item jobdir
+
+Path to the job directory to monitor (default: /var/lib/jenkins/jobs)
+
+=back
+
 =head1 AUTHOR
 
 Contributed by Holger Levsen. I wrote and used them first for
@@ -32,9 +44,15 @@ Released under the GPLv2.
 
 . $MUNIN_LIBDIR/plugins/plugin.sh
 
+JENKINS_JOBDIR=${jobdir:-/var/lib/jenkins/jobs}
+
 if [ "$1" = "autoconf" ]; then
+    if [ -d "$JENKINS_JOBDIR" ]; then
 	echo yes
-	exit 0
+    else
+        echo "no (could not find ${JENKINS_JOBDIR})"
+    fi
+    exit 0
 fi
 
 STATEFILE=$MUNIN_PLUGSTATE/$(basename $0)
@@ -49,7 +67,7 @@ if [ -f $STATEFILE ] && [ "$1" = "" ] ; then
 	exit 0
 fi
 
-JOB_PREFIXES=$(ls -1 /var/lib/jenkins/jobs/|cut -d "_" -f1|sort -f -u)
+JOB_PREFIXES=$(ls -1 "${JENKINS_JOBDIR}/"|cut -d "_" -f1|sort -f -u)
 if [ "$1" = "config" ]; then
 	echo 'graph_title Jenkins Jobs'
 	echo 'graph_args --base 1000 -l 0 '
@@ -67,6 +85,6 @@ if [ "$1" = "config" ]; then
 fi
 
 for PREFIX in $JOB_PREFIXES ; do
-	NR=$(find /var/lib/jenkins/jobs/ -maxdepth 1 -name "$PREFIX*" -type d | wc -l)
+	NR=$(find "${JENKINS_JOBDIR}/" -maxdepth 1 -name "$PREFIX*" -type d | wc -l)
 	echo "jenkins_jobs_$PREFIX.value $NR" | tee -a $STATEFILE
 done

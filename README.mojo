@@ -23,7 +23,7 @@ my $minion = Minion->new(File => 'sandbox/var/lib/queue.db');
 
 **** graphs
 
-     Request for RRD graphs are sent to the graph worker
+     Request for RRD graphs are sent to the minion.
 
 **** worker status
 

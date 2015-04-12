@@ -24,6 +24,9 @@ script/munin-cron
 # Dev Sandbox
 /sandbox/
 
+# Vendored perl libraries
+/local/
+
 # IDE files
 .idea/
 

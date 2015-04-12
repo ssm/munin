@@ -384,7 +384,15 @@ sub process_service {
         $value = "unknown";
     }
     elsif ( looks_like_number($value) ) {
-        $value = sprintf "%.2f", $value;
+        my @matches = $value =~ m{
+          (
+            -?                   # optional negative sign
+            \d+                  # integer
+            (?:\.\d+)?           # optional float
+            (?:[+-][eE]\d+)?     # optional scientific
+          )
+        }smx;
+        ($value) = @matches;
     }
     else {
         WARNING(  "Expected number, got \""

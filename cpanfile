@@ -19,6 +19,11 @@ feature 'master', 'munin master' => sub {
     requires 'IO::Socket::INET6',         '2.69';
 };
 
+feature 'mojo', 'munin master with Mojolicious and Minion' => sub {
+    requires 'Mojolicious', '6';
+    requires 'Minion', '1';
+};
+
 feature 'node', 'munin node and plugins' => sub {
     requires 'Net::Server::Daemonize', '0.06';
     requires 'Net::Server::Fork',      '0';

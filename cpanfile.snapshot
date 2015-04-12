@@ -276,6 +276,47 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 6.48
       Test::Simple 0.90
       perl 5.008
+  DBM-Deep-2.0011
+    pathname: R/RK/RKINYON/DBM-Deep-2.0011.tar.gz
+    provides:
+      DBM::Deep 2.0011
+      DBM::Deep::Array undef
+      DBM::Deep::Engine undef
+      DBM::Deep::Engine::DBI undef
+      DBM::Deep::Engine::File undef
+      DBM::Deep::Hash undef
+      DBM::Deep::Iterator undef
+      DBM::Deep::Iterator::DBI undef
+      DBM::Deep::Iterator::File undef
+      DBM::Deep::Iterator::File::BucketList undef
+      DBM::Deep::Iterator::File::Index undef
+      DBM::Deep::Null undef
+      DBM::Deep::Sector undef
+      DBM::Deep::Sector::DBI undef
+      DBM::Deep::Sector::DBI::Reference undef
+      DBM::Deep::Sector::DBI::Scalar undef
+      DBM::Deep::Sector::File undef
+      DBM::Deep::Sector::File::BucketList undef
+      DBM::Deep::Sector::File::Data undef
+      DBM::Deep::Sector::File::Index undef
+      DBM::Deep::Sector::File::Null undef
+      DBM::Deep::Sector::File::Reference undef
+      DBM::Deep::Sector::File::Scalar undef
+      DBM::Deep::Storage undef
+      DBM::Deep::Storage::DBI undef
+      DBM::Deep::Storage::File undef
+    requirements:
+      Digest::MD5 1.00
+      Fcntl 0.01
+      File::Path 0.01
+      File::Temp 0.01
+      Pod::Usage 1.3
+      Scalar::Util 1.14
+      Test::Deep 0.095
+      Test::Exception 0.21
+      Test::More 0.88
+      Test::Warn 0.08
+      perl 5.008_004
   Data-OptList-0.109
     pathname: R/RJ/RJBS/Data-OptList-0.109.tar.gz
     provides:
@@ -858,6 +899,24 @@ DISTRIBUTIONS
       bytes 0
       constant 0
       perl 5.008
+  Minion-1.13
+    pathname: S/SR/SRI/Minion-1.13.tar.gz
+    provides:
+      Minion 1.13
+      Minion::Backend undef
+      Minion::Backend::File undef
+      Minion::Backend::File::_Guard undef
+      Minion::Backend::Pg undef
+      Minion::Command::minion undef
+      Minion::Command::minion::job undef
+      Minion::Command::minion::worker undef
+      Minion::Job undef
+      Minion::Worker undef
+      Mojolicious::Plugin::Minion undef
+    requirements:
+      DBM::Deep 2.0011
+      ExtUtils::MakeMaker 0
+      Mojolicious 6.0
   Module-Build-0.4211
     pathname: L/LE/LEONT/Module-Build-0.4211.tar.gz
     provides:
@@ -966,6 +1025,121 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
+  Mojolicious-6.08
+    pathname: S/SR/SRI/Mojolicious-6.08.tar.gz
+    provides:
+      Mojo undef
+      Mojo::Asset undef
+      Mojo::Asset::File undef
+      Mojo::Asset::Memory undef
+      Mojo::Base undef
+      Mojo::ByteStream undef
+      Mojo::Cache undef
+      Mojo::Collection undef
+      Mojo::Content undef
+      Mojo::Content::MultiPart undef
+      Mojo::Content::Single undef
+      Mojo::Cookie undef
+      Mojo::Cookie::Request undef
+      Mojo::Cookie::Response undef
+      Mojo::DOM undef
+      Mojo::DOM::CSS undef
+      Mojo::DOM::HTML undef
+      Mojo::Date undef
+      Mojo::EventEmitter undef
+      Mojo::Exception undef
+      Mojo::Headers undef
+      Mojo::HelloWorld undef
+      Mojo::Home undef
+      Mojo::IOLoop undef
+      Mojo::IOLoop::Client undef
+      Mojo::IOLoop::Delay undef
+      Mojo::IOLoop::Server undef
+      Mojo::IOLoop::Stream undef
+      Mojo::JSON undef
+      Mojo::JSON::Pointer undef
+      Mojo::JSON::_Bool undef
+      Mojo::Loader undef
+      Mojo::Log undef
+      Mojo::Message undef
+      Mojo::Message::Request undef
+      Mojo::Message::Response undef
+      Mojo::Parameters undef
+      Mojo::Path undef
+      Mojo::Reactor undef
+      Mojo::Reactor::EV undef
+      Mojo::Reactor::Poll undef
+      Mojo::Server undef
+      Mojo::Server::CGI undef
+      Mojo::Server::Daemon undef
+      Mojo::Server::Hypnotoad undef
+      Mojo::Server::Morbo undef
+      Mojo::Server::PSGI undef
+      Mojo::Server::PSGI::_IO undef
+      Mojo::Server::Prefork undef
+      Mojo::Template undef
+      Mojo::Transaction undef
+      Mojo::Transaction::HTTP undef
+      Mojo::Transaction::WebSocket undef
+      Mojo::URL undef
+      Mojo::Upload undef
+      Mojo::UserAgent undef
+      Mojo::UserAgent::CookieJar undef
+      Mojo::UserAgent::Proxy undef
+      Mojo::UserAgent::Server undef
+      Mojo::UserAgent::Transactor undef
+      Mojo::Util undef
+      Mojolicious 6.08
+      Mojolicious::Command undef
+      Mojolicious::Command::cgi undef
+      Mojolicious::Command::cpanify undef
+      Mojolicious::Command::daemon undef
+      Mojolicious::Command::eval undef
+      Mojolicious::Command::generate undef
+      Mojolicious::Command::generate::app undef
+      Mojolicious::Command::generate::lite_app undef
+      Mojolicious::Command::generate::makefile undef
+      Mojolicious::Command::generate::plugin undef
+      Mojolicious::Command::get undef
+      Mojolicious::Command::inflate undef
+      Mojolicious::Command::prefork undef
+      Mojolicious::Command::psgi undef
+      Mojolicious::Command::routes undef
+      Mojolicious::Command::test undef
+      Mojolicious::Command::version undef
+      Mojolicious::Commands undef
+      Mojolicious::Controller undef
+      Mojolicious::Lite undef
+      Mojolicious::Plugin undef
+      Mojolicious::Plugin::Charset undef
+      Mojolicious::Plugin::Config undef
+      Mojolicious::Plugin::Config::Sandbox undef
+      Mojolicious::Plugin::DefaultHelpers undef
+      Mojolicious::Plugin::EPLRenderer undef
+      Mojolicious::Plugin::EPRenderer undef
+      Mojolicious::Plugin::HeaderCondition undef
+      Mojolicious::Plugin::JSONConfig undef
+      Mojolicious::Plugin::Mount undef
+      Mojolicious::Plugin::PODRenderer undef
+      Mojolicious::Plugin::TagHelpers undef
+      Mojolicious::Plugins undef
+      Mojolicious::Renderer undef
+      Mojolicious::Routes undef
+      Mojolicious::Routes::Match undef
+      Mojolicious::Routes::Pattern undef
+      Mojolicious::Routes::Route undef
+      Mojolicious::Sessions undef
+      Mojolicious::Static undef
+      Mojolicious::Types undef
+      Mojolicious::Validator undef
+      Mojolicious::Validator::Validation undef
+      Test::Mojo undef
+      ojo undef
+    requirements:
+      ExtUtils::MakeMaker 0
+      IO::Socket::IP 0.26
+      Pod::Simple 3.09
+      Time::Local 1.2
   Net-DNS-0.83
     pathname: N/NL/NLNETLABS/Net-DNS-0.83.tar.gz
     provides:

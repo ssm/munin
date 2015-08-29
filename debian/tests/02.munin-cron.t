@@ -12,6 +12,9 @@ setup() {
     cat >> $temp_conf_file <<EOF
 graph_strategy cron
 html_strategy  cron
+
+[localhost]
+address 127.0.0.1
 EOF
 }
 

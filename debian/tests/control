@@ -1,3 +1,3 @@
 Tests: run-tests
-Depends: @,perl,netcat-openbsd,daemontools
+Depends: @,perl
 Restrictions: needs-root

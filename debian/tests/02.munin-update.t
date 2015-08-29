@@ -13,8 +13,8 @@ setup() {
 graph_strategy cron
 html_strategy  cron
 
-[localhost]
-address 127.0.0.1
+[test.example.com]
+address ::1
 EOF
 }
 
@@ -23,19 +23,11 @@ test_expect_success "setup" "
 "
 
 test_expect_success "munin-update" "
-  setuidgid munin /usr/share/munin/munin-update
+  su - munin -c /usr/share/munin/munin-update
 "
 
-test_expect_success "munin-limits" "
-  setuidgid munin /usr/share/munin/munin-limits
-"
-
-test_expect_success "munin-graph" "
-  setuidgid munin /usr/share/munin/munin-graph
-"
-
-test_expect_success "munin-html" "
-  setuidgid munin /usr/share/munin/munin-html
+test_expect_success "rrd files created" "
+  find /var/lib/munin/example.com -type f -name 'test.example.com*.rrd'
 "
 
 test_done

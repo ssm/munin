@@ -8,6 +8,6 @@ stop on runlevel [!2345]
 task
 
 script
-  # Ensure /var/run/munin exists with correct permissions
-  install -m 0755 -o munin -g munin -d /var/run/munin
+  # Ensure /run/munin exists with correct permissions
+  install -m 0755 -o munin -g munin -d /run/munin
 end script

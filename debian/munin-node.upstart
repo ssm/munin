@@ -9,7 +9,7 @@ expect fork
 respawn
 
 pre-start script
-  install -m 0755 -o munin -g munin -d /var/run/munin
+  install -m 0755 -o munin -g munin -d /run/munin
 end script
 
 script

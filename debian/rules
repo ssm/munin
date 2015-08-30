@@ -82,8 +82,8 @@ override_dh_auto_install:
 		fi; \
 	done
 
-	rmdir $(CURDIR)/debian/munin/var/run/munin
-	rmdir $(CURDIR)/debian/munin-node/var/run/munin
+	rmdir $(CURDIR)/debian/munin/run/munin
+	rmdir $(CURDIR)/debian/munin-node/run/munin
 
 # "make clean" is being clever. Work around that. ;)
 override_dh_auto_clean:

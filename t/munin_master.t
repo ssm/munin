@@ -32,8 +32,7 @@ $t->get_ok('/service')
     ->content_like(qr/service page/i);
 
 $t->get_ok('/problems')
-    ->status_is(200)
-    ->content_like(qr/problems page/i);
+    ->status_is(200);
 
 $t->get_ok('/comparison')
     ->status_is(200)

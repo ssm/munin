@@ -27,7 +27,34 @@ sub welcome {
 
 sub problems {
     my $self = shift;
-    $self->render(text => 'problems page');
+
+    my $query = << 'EOQ';
+SELECT
+ nu.path AS NODEURL,
+ n.name AS NODENAME,
+ su.path AS URL,
+ su.path AS URLX,
+ s.name AS LABEL,
+ d.critical AS STATE_CRITICAL,
+ d.warning AS STATE_WARNING,
+ d.unknown AS STATE_UNKNOWN
+FROM
+ ds d
+ LEFT OUTER JOIN service s ON s.id = d.service_id
+ LEFT OUTER JOIN url su ON su.id = s.id and su.type = 'service'
+ LEFT OUTER JOIN node n ON n.id = s.node_id
+ LEFT OUTER JOIN url nu ON nu.id = n.id and nu.type = 'node'
+WHERE
+ d.critical = 1 OR
+ d.warning = 1 OR
+ d.unknown = 1
+EOQ
+
+    my $sth = $self->db->prepare_cached($query);
+    $sth->execute();
+    my ($result) = $sth->fetchall_arrayref( {} );
+
+    $self->render(json => $result);
 }
 
 sub comparison {
@@ -257,60 +284,6 @@ sub handle_request {
         $template_params{CONTENT_ONLY} = $cgi->url_param("content_only") || 0;
 
         $template_filename = "munin-dynazoom.tmpl";
-    }
-    elsif ( $path eq "problems.html" ) {
-
-        # Emit problem template
-
-        $template_filename = "munin-problemview.tmpl";
-
-        my $sth = $dbh->prepare_cached(
-"SELECT nu.path, n.name, su.path, s.name, d.critical, d.warning, d.unknown FROM ds d
-                                LEFT OUTER JOIN service s ON s.id = d.service_id
-                                LEFT OUTER JOIN url su ON su.id = s.id and su.type = 'service'
-                                LEFT OUTER JOIN node n ON n.id = s.node_id
-                                LEFT OUTER JOIN url nu ON nu.id = n.id and nu.type = 'node'
-                                WHERE d.critical = 1 OR d.warning = 1 OR d.unknown = 1
-                        "
-        );
-        $sth->execute();
-
-        my @criticals;
-        my @warnings;
-        my @unknowns;
-        while (
-            my ( $_node_url, $_node_name, $_url, $_s_name, $_c, $_w, $_u ) =
-            $sth->fetchrow_array )
-        {
-
-            my $img_day  = $_url . "-day.png";
-            my $img_week = $_url . "-day.png";
-
-            my $item = {
-                NODEURL  => $_node_url,
-                NODENAME => $_node_name,
-                URL      => $_url,
-                URLX     => $_url,
-                LABEL    => $_s_name,
-
-                STATE_CRITICAL => $_c,
-                STATE_WARNING  => $_w,
-                STATE_UNKNOWN  => $_u,
-
-                CIMGDAY  => $img_day,
-                CIMGWEEK => $img_week,
-            };
-
-            push @criticals, $item if $_c;
-            push @warnings,  $item if $_w;
-            push @unknowns,  $item if $_u;
-        }
-
-        # TODO - Create the model (problem)
-        $template_params{CRITICAL} = \@criticals;
-        $template_params{WARNING}  = \@warnings;
-        $template_params{UNKNOWN}  = \@unknowns;
-
     }
     elsif ( $path =~ /^([^\/]+)-(day|month|week|year)\.html$/ ) {
 

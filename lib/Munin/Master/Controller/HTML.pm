@@ -11,16 +11,61 @@ use Munin::Common::Logger;
 use File::Basename;
 use Data::Dumper;
 
+# For now: Find the top groups, then query each of these with a
+# recursive query.
+#
+# If munin-update started with a single root group, a query could
+# start there to find all groups and nodes from that point.  Same
+# query could be used from an arbitrary start group.
+#
+# Todo: Figure out if Adjacency List or Nested Sets can be used.
+#
+# Todo: Make correct template variables.
+
 sub welcome {
     my $self           = shift;
     my $nav_problems   = $self->_nav_problems();
     my $nav_categories = $self->_nav_categories();
     my $nav_groups     = $self->_nav_groups();
+
+    my $top_groups_query = <<'EOQ';
+SELECT grp.id
+FROM grp
+WHERE grp.p_id IS NULL
+EOQ
+
+    my $query = << 'EOQ';
+WITH RECURSIVE subgroup_of(id) AS (
+ VALUES(?) UNION SELECT grp.id from grp, subgroup_of
+ WHERE grp.p_id = subgroup_of.id
+)
+SELECT grp.name, grp.id, grp.p_id, node.id, node.name
+FROM
+ grp LEFT JOIN
+ node ON node.grp_id = grp.id
+WHERE grp.id IN subgroup_of;
+EOQ
+
+    my $sth = $self->db->prepare_cached($top_groups_query);
+    $sth->execute();
+    my $groups = $sth->fetchall_arrayref({});
+
+    my @result;
+
+    foreach my $group (@{$groups}) {
+        $self->app->log->debug('found root group: ' . $group->{id});
+        my $sth = $self->db->prepare_cached($query);
+        $sth->bind_param(1, $group->{id});
+        $sth->execute();
+        push @result, $sth->fetchall_arrayref( {} );
+    }
+
     $self->render(
         json => {
             nav_problems   => $nav_problems,
             nav_categories => $nav_categories,
             nav_groups     => $nav_groups,
+            content        => \@result,
         }
     );
 }

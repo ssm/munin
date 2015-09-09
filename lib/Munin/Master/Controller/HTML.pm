@@ -237,51 +237,6 @@ sub handle_request {
     # Common Navigation params
     ###################
 
-    # Problems nav
-    {
-        my $sth = $dbh->prepare_cached(
-            "SELECT SUM(critical), SUM(warning), SUM(unknown) FROM ds");
-        $sth->execute();
-        my ( $critical, $warning, $unknown ) = $sth->fetchrow_array;
-        $template_params{NCRITICAL} = $critical;
-        $template_params{NWARNING}  = $warning;
-        $template_params{NUNKNOWN}  = $unknown;
-    }
-
-    # Groups nav
-    {
-        my $sth = $dbh->prepare_cached(
-"SELECT g.name, u.path FROM grp g INNER JOIN url u ON u.id = g.id AND u.type = 'group' WHERE g.p_id IS NULL ORDER BY g.name ASC"
-        );
-        $sth->execute();
-
-        my $rootgroups = [];
-        while ( my ( $_name, $_path ) = $sth->fetchrow_array ) {
-            push @$rootgroups, { NAME => $_name, R_PATH => '', URL => $_path };
-        }
-        $template_params{ROOTGROUPS} = $rootgroups;
-    }
-
-    # Categories nav
-    {
-        my $sth = $dbh->prepare_cached(
-"SELECT DISTINCT category FROM service_categories ORDER BY category ASC"
-        );
-        $sth->execute();
-
-        my $globalcats = [];
-        while ( my ($_category) = $sth->fetchrow_array ) {
-            my %urls = map { ( "URL$_" => "$_category-$_.html" ) } @times;
-            push @$globalcats,
-              {
-                R_PATH => '',
-                NAME   => $_category,
-                %urls,
-              };
-        }
-        $template_params{GLOBALCATS} = $globalcats;
-    }
-
 # Handle all the special pages that are not in the url table, but with fixed urls
     if ( $path eq "" ) {
 

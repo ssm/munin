@@ -199,6 +199,9 @@ sub _lookup_categories {
     return {};
 }
 
+1;
+
+__END__
 
 #### Old code below
 use DBI;

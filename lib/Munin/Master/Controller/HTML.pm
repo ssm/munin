@@ -34,18 +34,6 @@ FROM grp
 WHERE grp.p_id IS NULL
 EOQ
 
-    my $query = << 'EOQ';
-WITH RECURSIVE subgroup_of(id) AS (
- VALUES(?) UNION SELECT grp.id from grp, subgroup_of
- WHERE grp.p_id = subgroup_of.id
-)
-SELECT grp.name, grp.id, grp.p_id, node.id, node.name
-FROM
- grp LEFT JOIN
- node ON node.grp_id = grp.id
-WHERE grp.id IN subgroup_of;
-EOQ
-
     my $sth = $self->db->prepare_cached($top_groups_query);
     $sth->execute();
     my $groups = $sth->fetchall_arrayref({});
@@ -53,11 +41,7 @@ EOQ
     my @result;
 
     foreach my $group (@{$groups}) {
-        $self->app->log->debug('found root group: ' . $group->{id});
-        my $sth = $self->db->prepare_cached($query);
-        $sth->bind_param(1, $group->{id});
-        $sth->execute();
-        push @result, $sth->fetchall_arrayref( {} );
+        push @result, $self->_lookup_group($group->{id});
     }
 
     $self->render(
@@ -183,6 +167,27 @@ EOT
             };
     }
     return $globalcats;
+}
+
+sub _lookup_group {
+    my $self = shift;
+    my $group_id = shift;
+
+    my $query = << 'EOQ';
+WITH RECURSIVE subgroup_of(id) AS (
+ VALUES(?) UNION SELECT grp.id from grp, subgroup_of
+ WHERE grp.p_id = subgroup_of.id
+)
+SELECT grp.name, grp.id, grp.p_id, node.id, node.name
+FROM
+ grp LEFT JOIN
+ node ON node.grp_id = grp.id
+WHERE grp.id IN subgroup_of;
+EOQ
+    my $sth = $self->db->prepare_cached($query);
+    $sth->bind_param(1, $group_id);
+    $sth->execute();
+    return $sth->fetchall_arrayref( {} );
 }
 
 sub _lookup_groups {

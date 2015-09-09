@@ -28,19 +28,9 @@ sub welcome {
     my $nav_categories = $self->_nav_categories();
     my $nav_groups     = $self->_nav_groups();
 
-    my $top_groups_query = <<'EOQ';
-SELECT grp.id
-FROM grp
-WHERE grp.p_id IS NULL
-EOQ
-
-    my $sth = $self->db->prepare_cached($top_groups_query);
-    $sth->execute();
-    my $groups = $sth->fetchall_arrayref({});
-
     my @result;
 
-    foreach my $group (@{$groups}) {
+    foreach my $group (@{$self->_lookup_top_groups}) {
         push @result, $self->_lookup_group($group->{id});
     }
 
@@ -190,9 +180,18 @@ EOQ
     return $sth->fetchall_arrayref( {} );
 }
 
-sub _lookup_groups {
+sub _lookup_top_groups {
     my $self = shift;
-    return {};
+
+    my $top_groups_query = <<'EOQ';
+SELECT grp.id
+FROM grp
+WHERE grp.p_id IS NULL
+EOQ
+
+    my $sth = $self->db->prepare_cached($top_groups_query);
+    $sth->execute();
+    return $sth->fetchall_arrayref({});
 }
 
 sub _lookup_categories {

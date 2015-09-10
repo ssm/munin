@@ -1,15 +1,7 @@
 package Munin::Master::Controller::HTML;
 use Mojo::Base 'Mojolicious::Controller';
 
-use POSIX;
-use HTML::Template::Pro;
-
-use Munin::Master::Utils;
-
-use Munin::Common::Logger;
-
-use File::Basename;
-use Data::Dumper;
+use Munin::Master::Model;
 
 # For now: Find the top groups, then query each of these with a
 # recursive query.

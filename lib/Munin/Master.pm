@@ -1,6 +1,7 @@
 package Munin::Master;
 use Mojo::Base 'Mojolicious';
 
+use Munin::Master::Model;
 use DBI;
 use DBD::SQLite;
 
@@ -47,6 +48,12 @@ sub _setup_routes {
 
 sub _setup_helpers {
     my $self = shift;
+
+    $self->helper(
+        'model' => sub {
+            state $model = Munin::Master::Model->new($self);
+        }
+    );
 
     $self->helper(
         'db' => sub {

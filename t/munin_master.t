@@ -21,7 +21,15 @@ $t->get_ok('/')
     ->json_has('/nav_problems')
     ->json_has('/nav_problems/0/NCRITICALS')
     ->json_has('/nav_problems/0/NUNKNOWNS')
-    ->json_has('/nav_problems/0/NWARNINGS');
+    ->json_has('/nav_problems/0/NWARNINGS')
+    ->json_has('/content');
+
+$t->get_ok('/problems')
+    ->status_is(200)
+    ->json_has('/nav_categories')
+    ->json_has('/nav_groups')
+    ->json_has('/nav_problems')
+    ->json_has('/content');
 
 $t->get_ok('/node')
     ->status_is(200)
@@ -30,9 +38,6 @@ $t->get_ok('/node')
 $t->get_ok('/service')
     ->status_is(200)
     ->content_like(qr/service page/i);
-
-$t->get_ok('/problems')
-    ->status_is(200);
 
 $t->get_ok('/comparison')
     ->status_is(200)

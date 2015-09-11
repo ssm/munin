@@ -33,7 +33,10 @@ $t->get_ok('/problems')
 
 $t->get_ok('/node')
     ->status_is(200)
-    ->content_like(qr/node page/i);
+    ->json_has('/nav_categories')
+    ->json_has('/nav_groups')
+    ->json_has('/nav_problems')
+    ->json_has('/content');
 
 $t->get_ok('/service')
     ->status_is(200)

@@ -60,7 +60,21 @@ sub comparison {
 
 sub node {
     my $self = shift;
-    $self->render(text => 'node page');
+    my $nav_problems   = $self->model->nav_problems();
+    my $nav_categories = $self->model->nav_categories();
+    my $nav_groups     = $self->model->nav_groups();
+
+    my $node_id = 1;
+    my $node = $self->model->node($node_id);
+
+    $self->render(
+        json => {
+            nav_problems   => $nav_problems,
+            nav_categories => $nav_categories,
+            nav_groups     => $nav_groups,
+            content        => $node,
+        }
+    );
 }
 
 sub service {

@@ -108,6 +108,22 @@ EOQ
     return $sth->fetchall_arrayref( {} );
 }
 
+
+sub node {
+    my $self = shift;
+    my $node_id = shift;
+
+    my $query = << 'EOQ';
+SELECT node.id, node.name, node.path
+FROM node
+WHERE node.id = (?);
+EOQ
+    my $sth = $self->{app}->db->prepare_cached($query);
+    $sth->bind_param(1, $node_id);
+    $sth->execute();
+    return $sth->fetchall_arrayref( {} );
+}
+
 sub categories {
     my $self = shift;
     return {};

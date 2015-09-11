@@ -79,7 +79,22 @@ sub node {
 
 sub service {
     my $self = shift;
-    $self->render(text => 'service page');
+
+    my $nav_problems   = $self->model->nav_problems();
+    my $nav_categories = $self->model->nav_categories();
+    my $nav_groups     = $self->model->nav_groups();
+
+    my $service_id = 1;
+    my $service = $self->model->service($service_id);
+
+    $self->render(
+        json => {
+            nav_problems   => $nav_problems,
+            nav_categories => $nav_categories,
+            nav_groups     => $nav_groups,
+            content        => $service,
+        }
+    );
 }
 
 sub group {

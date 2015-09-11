@@ -40,7 +40,11 @@ $t->get_ok('/node')
 
 $t->get_ok('/service')
     ->status_is(200)
-    ->content_like(qr/service page/i);
+    ->status_is(200)
+    ->json_has('/nav_categories')
+    ->json_has('/nav_groups')
+    ->json_has('/nav_problems')
+    ->json_has('/content');
 
 $t->get_ok('/comparison')
     ->status_is(200)

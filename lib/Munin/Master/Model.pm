@@ -124,6 +124,23 @@ EOQ
     return $sth->fetchall_arrayref( {} );
 }
 
+sub service {
+    my $self = shift;
+    my $service_id = shift;
+
+    my $query = << 'EOQ';
+SELECT id, name, path
+FROM service
+WHERE service.id = (?)
+EOQ
+
+    my $sth = $self->{app}->db->prepare_cached($query);
+    $sth->bind_param(1, $service_id);
+    $sth->execute();
+    return $sth->fetchall_arrayref( {} );
+
+}
+
 sub categories {
     my $self = shift;
     return {};

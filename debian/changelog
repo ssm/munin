@@ -1,3 +1,17 @@
+munin (2.0.25-3~1442165585.gbp1eee36) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @1eee363451cb30cc69d39f2e5383023f9151275a **
+
+  * [883a933] Move suggestion for XML::Simple from node to plugin package
+  * [4011aaa] Use /run/munin instead of /var/run/munin (Closes: #790009)
+  * [c34aea5] Fix path and whitespace in munin-async README.
+    Thanks to Francois Gouget (Closes: #798599)
+  * [0f78692] Plugin config: Exclude /run/user from the df* plugins.
+    Thanks to Jan-Philip Gehrcke (Closes: #788736)
+  * [1eee363] refresh and add limits patch
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Sun, 13 Sep 2015 19:33:05 +0200
+
 munin (2.0.25-2) unstable; urgency=medium
 
   [ Holger Levsen ]

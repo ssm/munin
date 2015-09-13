@@ -15,7 +15,7 @@ Content-Transfer-Encoding: 8bit
  1 file changed, 10 insertions(+), 11 deletions(-)
 
 diff --git a/plugins/node.d/http_loadtime.in b/plugins/node.d/http_loadtime.in
-index 4364a02..a9d7854 100644
+index a87c3db..94ca671 100644
 --- a/plugins/node.d/http_loadtime.in
 +++ b/plugins/node.d/http_loadtime.in
 @@ -42,14 +42,15 @@ if [ "$1" = "autoconf" ]; then

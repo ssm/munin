@@ -26,38 +26,74 @@ The following environment variables are used by this plugin:
 
 =cut
 
-. $MUNIN_LIBDIR/plugins/plugin.sh
+. "${MUNIN_LIBDIR}/plugins/plugin.sh"
 
-print_values() {
-    df -P -l -i 2>/dev/null | sed -e '1d' -e '/\/\//d' -e 's/%//' |
-    while read dev avail used free pct fs; do
-        echo "$(clean_fieldname $dev).value $pct"
-    done
+get_data() {
+    df -P -l -i -x btrfs 2>/dev/null | sed -e '1d' -e '/\/\//d' -e 's/%//'
 }
 
-if [ "$1" = "autoconf" ]; then
-    if [ -z "$(print_values)" ] ; then
-	echo no
-    else
-	echo yes
-    fi
-    exit 0
-fi
+print_values() {
+    get_data |
+        while read dev avail used free pct fs; do
+            fieldname=$(clean_fieldname "$dev")
+            printf "%s.value %s\n" "$fieldname" "$pct"
+        done
+}
 
-if [ "$1" = "config" ]; then
+print_graph_config() {
     echo 'graph_title Inode usage in percent'
     echo 'graph_args --upper-limit 100 -l 0'
     echo 'graph_vlabel %'
     echo 'graph_scale no'
     echo 'graph_category disk'
-    df -P -l -i  | sed -e '1d' -e '/\/\//d' -e 's/%//' | sort |
-    while read dev avail used free pct fs; do
-	name=$(clean_fieldname $dev)
-	echo "$name.label $fs"
-	print_warning $name
-	print_critical $name
-    done
-    exit 0
-fi
+}
 
-print_values
+print_ds_config() {
+    get_data |
+        while read dev avail used free pct fs; do
+	    fieldname=$(clean_fieldname "$dev")
+	    printf "%s.label %s\n" "$fieldname" "$fs"
+	    print_warning "$fieldname"
+	    print_critical "$fieldname"
+        done
+}
+
+print_ds_dirtyconfig() {
+    get_data |
+        while read dev avail used free pct fs; do
+	    name=$(clean_fieldname $dev)
+	    printf "%s.label %s\n" "$name" "$fs"
+	    print_warning "$name"
+	    print_critical "$name"
+            echo "$(clean_fieldname $dev).value $pct"
+        done
+}
+
+print_config() {
+    print_graph_config
+    if [ -n "${CAP_MUNIN_DIRTYCONFIG:-}" ]; then
+	print_ds_dirtyconfig
+    else
+	print_ds_config
+    fi
+}
+
+print_autoconf() {
+    if [ -z "$(print_values)" ] ; then
+	echo no
+    else
+	echo yes
+    fi
+}
+
+case "${1:-}" in
+    autoconf)
+	print_autoconf
+	;;
+    config)
+	print_config
+	;;
+    *)
+	print_values
+	;;
+esac

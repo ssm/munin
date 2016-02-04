@@ -9,6 +9,10 @@ disk IO becoming a bottleneck.
 
 To reduce this disk IO, you can use the RRD Cache Daemon.
 
+.. sidebar:: Note
+
+  The munin 3 packages provided by your distribution may alredy include this.
+
 This will spool RRD changes in a queue, and flush changes on demand,
 and periodically. This will replace lots of random writes with a much
 smaller amount of sequential writes.
@@ -47,21 +51,28 @@ Example
 Create a directory for the rrdcached journal, and have the "munin"
 user own it. (in this example: /var/lib/munin/rrdcached-journal).
 
-Set up a separate RRDCached instance, run by the munin user. The
-following command starts an RRDCached instance, and can be added to
-/etc/rc.local.
+Set up a separate RRDCached instance, run by the munin user. It should create
+one socket with all privileges for the munin master, and one socket with FLUSH
+privileges for the munin httpd.  The munin group grants access the flush
+socket.
+
+The following command starts an RRDCached instance. Ensure it runs as the
+"munin" user and group.
 
 .. code-block:: bash
 
-  sudo -u munin /usr/bin/rrdcached \
+  /usr/bin/rrdcached \
     -p /run/munin/rrdcached.pid \
     -B -b /var/lib/munin/ \
     -F -j /var/lib/munin/rrdcached-journal/ \
-    -m 0660 -l unix:/run/munin/rrdcached.sock \
+    -m 0600 -l unix:/run/munin/update.sock \
+    -P FLUSH,PENDING -m 0660 -l unix:/run/munin/flush.sock \
     -w 1800 -z 1800 -f 3600
 
-Note: While testing, add "-g" to the command line to prevent rrdcached
-from forking into the background.
+.. sidebar:: Running in the foreground
+
+  While testing, add "-g" to the command line to prevent rrdcached
+  from forking into the background.
 
 The munin grapher also needs write access to this socket, in order for
 it to tell the RRDCached to flush data needed for graphing. If you run
@@ -78,11 +89,17 @@ Recommended: If you have systemd or upstart installed, use the examples below.
 * :ref:`example-rrdcached-upstart`
 * :ref:`example-rrdcached-systemd`
 
-Configuring munin to use  rrdcached
-===================================
+Configuring munin to use rrdcached
+==================================
 
 To enable rrdcached on the munin master, you will need to set the
-"rrdcached_socket" line in /etc/munin/munin.conf
+"rrdcached_socket" line in /etc/munin/munin.conf.
+
+.. sidebar:: rrdcached socket address
+
+ The rrdcached_socket value should be an absolute pathname to the socket
+ created by rrdcached.  rrdcached accepts several formats for this setting,
+ munin does not.
 
 ::
 
